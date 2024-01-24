@@ -1,11 +1,9 @@
-import org.junit.Assert;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import java.util.List;
 
 // História do Usuário #1:
 // Como um cliente cadastrado no https://automationexercise.com/
@@ -34,8 +32,7 @@ public class TestCase1 {
         passwordField.sendKeys("teste123");
         loginButton.click();
 
-        List<WebElement> loggedInElement = driver.findElements(By.xpath("//a[contains(text(), 'Logged in as')]"));
-        Assert.assertEquals(1, loggedInElement.size());
+        WebElement loggedInElement = driver.findElement(By.xpath("//a[contains(text(), 'Logged in as')]"));
 
         // Usuário acessa a página de produtos
         driver.get("https://automationexercise.com/products");
