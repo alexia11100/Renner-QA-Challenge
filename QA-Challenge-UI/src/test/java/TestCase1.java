@@ -21,7 +21,8 @@ public class TestCase1 {
 
     @Test
     public void testPurchaseMultipleItems() {
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\alexia.oliveira\\rest assured VemSer\\vs12-qa\\modulo-04-api\\restassured\\QA-Challenge-UI\\chromedriver-win64\\chromedriver.exe");
+        // Set the chromedriver path here
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\alexia.oliveira\\chromedriver-win64\\chromedriver.exe");
         driver.manage().window().maximize();
 
         login("teste87@teste.com", "teste123");
