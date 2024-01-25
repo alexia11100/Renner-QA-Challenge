@@ -1,12 +1,11 @@
 import org.junit.Assert;
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 // História do Usuário #1:
 // Como um cliente cadastrado no https://automationexercise.com/
@@ -18,64 +17,75 @@ import java.util.concurrent.TimeUnit;
 // Men Tshirt - 1
 public class TestCase1 {
     WebDriver driver = new ChromeDriver();
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
     @Test
     public void testPurchaseMultipleItems() {
         System.setProperty("webdriver.chrome.driver", "C:\\Users\\alexia.oliveira\\rest assured VemSer\\vs12-qa\\modulo-04-api\\restassured\\QA-Challenge-UI\\chromedriver-win64\\chromedriver.exe");
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
-        // Usuário acessa a conta
-        driver.get("https://automationexercise.com/login");
         login("teste87@teste.com", "teste123");
-        driver.findElement(By.xpath("//a[contains(text(), 'Logged in as')]"));
-
-        // Usuário acessa a página de produtos
-        driver.get("https://automationexercise.com/products");
-
-        searchProduct("Stylish Dress");
-        WebElement viewProductButton = driver.findElement(By.xpath("/html/body/section[2]/div[1]/div/div[2]/div/div[2]/div/div[2]/ul/li/a"));
-        viewProductButton.click();
-        closeAd();
-
-        WebElement productTitle = driver.findElement(By.xpath("/html/body/section/div/div/div[2]/div[2]/div[2]/div/h2"));
-        Assert.assertEquals("Stylish Dress", productTitle.getText());
-
-        WebElement productAmount = driver.findElement(By.xpath("//*[@id=\"quantity\"]"));
-        productAmount.sendKeys(Keys.CONTROL, "a");
-        productAmount.sendKeys("3");
-        Assert.assertEquals("3", productAmount.getAttribute("value"));
-
-
-        //searchProduct("Beautiful Peacock Blue Cotton Linen Saree");
-        //searchProduct("Men Tshirt");
-
+        addProduct("Stylish Dress", "3");
+        addProduct("Beautiful Peacock Blue Cotton Linen Saree", "2");
+        addProduct("Men Tshirt", "1");
+        // validateCartProducts()
+        // buyCartProducts()
     }
 
-    public void searchProduct(String name){
-        WebElement searchField = driver.findElement(By.xpath("//*[@id=\"search_product\"]"));
-        WebElement searchButton = driver.findElement(By.xpath("//*[@id=\"submit_search\"]"));
+    public void addProduct(String name, String quantity){
+        // Go to products page
+        driver.get("https://automationexercise.com/products");
+
+        // Get the product by the name
+        WebElement searchField = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"search_product\"]")));
+        WebElement searchButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"submit_search\"]")));
 
         searchField.sendKeys(Keys.CONTROL, "a");
         searchField.sendKeys(name);
         searchButton.click();
+
+        WebElement viewProductButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/section[2]/div[1]/div/div[2]/div/div[2]/div/div[2]/ul/li/a")));
+        viewProductButton.click();
+        closeAd();
+
+        // Assert product title, set quantity and add to cart
+        WebElement productTitle = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/section/div/div/div[2]/div[2]/div[2]/div/h2")));
+        Assert.assertEquals(name, productTitle.getText());
+
+        WebElement productQuantity = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"quantity\"]")));
+        productQuantity.sendKeys(Keys.CONTROL, "a");
+        productQuantity.sendKeys(quantity);
+        Assert.assertEquals(quantity, productQuantity.getAttribute("value"));
+
+        WebElement addToCartButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/section/div/div/div[2]/div[2]/div[2]/div/span/button")));
+        addToCartButton.click();
+        WebElement addedText = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//h4[normalize-space() = 'Added!']")));
+        Assert.assertEquals("Added!", addedText.getText());
     }
 
     public void login(String email, String password){
-        WebElement emailField = driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[2]"));
-        WebElement passwordField = driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[3]"));
-        WebElement loginButton = driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/button"));
+        driver.get("https://automationexercise.com/login");
+
+        WebElement emailField = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[2]")));
+        WebElement passwordField = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[3]")));
+        WebElement loginButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/button")));
 
         emailField.sendKeys(email);
         passwordField.sendKeys(password);
         loginButton.click();
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[contains(text(), 'Logged in as')]")));
     }
 
     public void closeAd(){
-        WebElement frameAd = driver.findElement(By.xpath("/html/ins/div/iframe"));
-        driver.switchTo().frame(frameAd);
-        WebElement closeButton = driver.findElement(By.xpath("//*[@id=\"dismiss-button\"]"));
-        closeButton.click();
-        driver.switchTo().defaultContent();
+        try {
+            WebElement frameAd = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("/html/ins/div/iframe")));
+            driver.switchTo().frame(frameAd);
+            WebElement closeButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"dismiss-button\"]")));
+            closeButton.click();
+        } catch (TimeoutException ignored) {
+        }
+        finally {
+            driver.switchTo().defaultContent();
+        }
     }
 }
